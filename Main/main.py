@@ -22,6 +22,17 @@ Stays up until manually stopped
 
 
 import socket
+import sys
+import cv2
+import os
+
+sys.path.insert(1, '../monodepth2/')
+from test_simple import *
+
+sys.path.insert(1, '../Open3D-master/examples/Python/ReconstructionSystem')
+from run_system import *
+
+
 
 # get the hostname
 host = socket.gethostname() 
@@ -63,27 +74,52 @@ with server_socket:
                 file.write(recvfile)
         
         print('file saved')
-    
+
+
+        '''
+        Make video into images and store in 'rgb_images' folder
+        '''
+
+        if not os.path.exists('dataset'):
+            os.makedirs('dataset')
+
+        if not os.path.exists('./dataset/image'):
+            os.makedirs('./dataset/image')
+        
+        vidcap = cv2.VideoCapture(savefilename)
+        success,image = vidcap.read()
+
+        # Saving space while saving
+        params = list()
+        params.append(cv2.CV_IMWRITE_PNG_COMPRESSION)
+        params.append(8)
+        
+        count = 0
+        while success:
+            
+            cv2.imwrite("./dataset/image/frame%d.png" % count, image, params)     # save frame as PNG file      
+            success,image = vidcap.read()
+            print('Read a new frame: ', success)
+            count += 1
     
         '''
         2. Generate depth maps from the video recieved
         
-        Using monodepth2 to get depth maps from rgb images
+        Using monodepth2 to get depth maps from rgb images and saving in 'depth_images' folder
+ 
         '''
-        
-
-
-
+        args = parse_args()
+        test_simple(args)
 
         '''
         3. Generate point cloud using open3d and rgbd data
         '''
-    
+
     
         '''
         4. Send the point cloud file to the mobile
         '''
-    
+
     
     # Closing connection
     con.close()

@@ -27,9 +27,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Simple testing funtion for Monodepthv2 models.')
 
-    parser.add_argument('--image_path', type=str,
-                        help='path to a test image or folder of images', required=True)
-    parser.add_argument('--model_name', type=str,
+    parser.add_argument('--image_path', type=str, default='../Main/dataset/image/',
+                        help='path to a test image or folder of images')
+    parser.add_argument('--model_name', type=str, default="mono+stereo_1024x320",
                         help='name of a pretrained model to use',
                         choices=[
                             "mono_640x192",
@@ -42,12 +42,12 @@ def parse_args():
                             "stereo_1024x320",
                             "mono+stereo_1024x320"])
     parser.add_argument('--ext', type=str,
-                        help='image extension to search for in folder', default="jpg")
+                        help='image extension to search for in folder', default="png")
     parser.add_argument("--no_cuda",
                         help='if set, disables CUDA',
                         action='store_true')
     parser.add_argument("--save_path",
-                        default='./saved/',type=str)
+                        default='../Main/dataset/depth',type=str)
     return parser.parse_args()
 
 
@@ -99,7 +99,7 @@ def test_simple(args):
     elif os.path.isdir(args.image_path):
         # Searching folder for images
         paths = glob.glob(os.path.join(args.image_path, '*.{}'.format(args.ext)))
-        output_directory = args.image_path
+        output_directory = args.save_path
     else:
         raise Exception("Can not find args.image_path: {}".format(args.image_path))
 
@@ -129,10 +129,12 @@ def test_simple(args):
                 disp, (original_height, original_width), mode="bilinear", align_corners=False)
 
             # Saving numpy file
-            output_name = os.path.splitext(os.path.basename(image_path))[0]
+            '''
             name_dest_npy = os.path.join(output_directory, "{}_disp.npy".format(output_name))
             scaled_disp, _ = disp_to_depth(disp, 0.1, 100)
             np.save(name_dest_npy, scaled_disp.cpu().numpy())
+            '''
+            output_name = os.path.splitext(os.path.basename(image_path))[0]
 
             # Saving colormapped depth image
             disp_resized_np = disp_resized.squeeze().cpu().numpy()
@@ -142,7 +144,10 @@ def test_simple(args):
             colormapped_im = (mapper.to_rgba(disp_resized_np)[:, :, :3] * 255).astype(np.uint8)
             im = pil.fromarray(colormapped_im)
 
-            name_dest_im = os.path.join(output_directory, "{}_disp.jpeg".format(output_name))
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+
+            name_dest_im = os.path.join(output_directory, "{}_disp.png".format(output_name))
             im.save(name_dest_im)
 
             print("   Processed {:d} of {:d} images - saved prediction to {}".format(

@@ -20,6 +20,8 @@ import android.widget.VideoView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -63,8 +65,8 @@ public class VideoPlayActivity extends AppCompatActivity {
 
         verifyStoragePermissions(this);
 
-        final Button clicable = (Button) findViewById(R.id.button1);
-        clicable.setOnClickListener(new View.OnClickListener() {
+        final Button clicable1 = (Button) findViewById(R.id.button1);
+        clicable1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 send sendfile = new send();
@@ -78,10 +80,22 @@ public class VideoPlayActivity extends AppCompatActivity {
             }
         });
 
-
+        final Button clicable2 = (Button) findViewById(R.id.button2);
+        clicable2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                recieve recievefile = new recieve();
+//                message = inputtext.getText().toString();
+                Log.d(TAG, "onClick: ============================================");
+                recievefile.execute();
+                if(recievefile.getStatus() == AsyncTask.Status.FINISHED) {
+                    // My AsyncTask is done and onPostExecute was called
+                    textView.setText("Sent");
+                }
+            }
+        });
 
     }
-
 
 
     class send extends AsyncTask<Void, Void, Void> {
@@ -96,14 +110,14 @@ public class VideoPlayActivity extends AppCompatActivity {
 
             try{
 
-                s = new Socket("192.168.43.221",5000);
+                s = new Socket("192.168.0.4",5000);
 
 //                File file = new File(videoUri.toString());
 //                Environment.getExternalStorageDirectory().getAbsolutePath()
 //                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
 //                        videoUri.toString());
                 File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
-                        "/Camera/VID_20191222_175025.mp4"); // works
+                        "/Camera/VID_20200222_163752.mp4"); // works
 
 
 //                File file = new File("storage/DCIM/Camera/VID_20191222_112747.mp4");
@@ -144,6 +158,67 @@ public class VideoPlayActivity extends AppCompatActivity {
         }
     }
 
+    class recieve extends AsyncTask<Void, Void, Void>{
+
+        Socket s;
+
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try{
+
+                s = new Socket("192.168.0.4",5000);
+
+                InputStream in = null;
+                OutputStream out = null;
+
+
+                try {
+                    in = s.getInputStream();
+                    Log.d(TAG, "doInBackground: Connected to the server");
+                } catch (IOException ex) {
+                    System.out.println("Can't get socket input stream. ");
+                }
+
+                //Create a new file that points to the root directory, with the given name:
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
+                        "/Camera/pcd.ply");
+
+
+
+
+                try {
+                    out = new FileOutputStream(file);
+                    Log.d(TAG, "doInBackground: Output file found");
+                } catch (FileNotFoundException ex) {
+                    System.out.println("File not found. ");
+                }
+
+                byte[] bytes = new byte[16*1024];
+
+                int count;
+                Log.d(TAG, "doInBackground: Starting to write to file");
+                while ((count = in.read(bytes)) > 0) {
+                    Log.d(TAG, "doInBackground: Started");
+                    out.write(bytes, 0, count);
+                    Log.d(TAG, "doInBackground: recieving");
+                }
+
+                out.close();
+                in.close();
+                s.close();
+
+            } catch (UnknownHostException e) {
+                System.out.println("Fail");
+                e.printStackTrace();
+            } catch (IOException e) {
+                System.out.println("Fail");
+//                System.out.println(ip);
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 
 //    @Override
 //    protected void onProgressUpdate(String item) {

@@ -27,5 +27,13 @@
         android:text="Send Video"
         android:id="@+id/button1"
         />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+        android:layout_below="@id/button1"
+        android:text="Recieve Point cloud"
+        android:id="@+id/button2"
+        />
 
 </RelativeLayout>
