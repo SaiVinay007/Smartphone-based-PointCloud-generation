@@ -34,51 +34,71 @@ from run_system import *
 
 
 
-# get the hostname
-host = socket.gethostname() 
-# initiate port number above 1024
-port = 5000
+class Main():
 
-# get instance
-server_socket = socket.socket()
-
-# bind host address and port together
-server_socket.bind(('',port))
-
-# can listen to 10 clients simultaneously
-server_socket.listen(10)
-
-print('waiting for connection...')
-
-with server_socket:
-
-    # accept new connection
-    con, addr = server_socket.accept()
-    print('server connected to',addr)
+    def __init__(self):
+        super().__init__()
+        # get the hostname 
+        self.host = socket.gethostname() 
+        # initiate port number above 1024
+        self.port = 5000
     
-    with con:
-        # Get the name of the file which you intend to save
-        savefilename = input('Enter filename to save as : ')
+    def create_server(self):
+        # get instance
+        self.server_socket = socket.socket()
 
-
-        with open(savefilename, 'wb') as file:
-            
-            while True:
-                # receive data stream. it won't accept data packet greater than 4096 bytes
-                recvfile = con.recv(4096)
-            
-                if not recvfile:
-                    print("recvfile is 'None' ")
-                    break
-            
-                file.write(recvfile)
+        # bind host address and port together
+        self.server_socket.bind(('',port))
         
-        print('file saved')
+        return
 
 
-        '''
-        Make video into images and store in 'rgb_images' folder
-        '''
+    def start_server(self):
+        # can listen to 10 clients simultaneously
+        self.server_socket.listen(10)
+
+        print('waiting for connection...')
+
+        with self.server_socket:
+
+            # accept new connection
+            self.con, self.addr = self.server_socket.accept()
+            print('server connected to : ', self.addr)
+
+            self.get_data_from_client()
+        return
+    
+
+    def get_data_from_client(self):
+
+        with self.con:
+            # Get the name of the file which you intend to save
+            self.savefilename = input('Enter filename to save as : ')
+
+            # Reecieving video from the mobile phone
+            with open(self.savefilename, 'wb') as file:
+                
+                while True:
+                    # receive data stream. it won't accept data packet greater than 4096 bytes
+                    recvfile = self.con.recv(4096)
+                
+                    if not recvfile:
+                        print("recvfile is 'None' ")
+                        break
+                
+                    file.write(recvfile)
+
+                file.close()
+            
+            print('file saved')
+
+        return
+    
+    def process_data(self):
+
+        # Processing the data and getting the desired output 
+
+        # Make video into images and store in 'rgb_images' folder
 
         if not os.path.exists('dataset'):
             os.makedirs('dataset')
@@ -87,7 +107,7 @@ with server_socket:
             os.makedirs('./dataset/image')
         
         vidcap = cv2.VideoCapture(savefilename)
-        success,image = vidcap.read()
+        success, image = vidcap.read()
 
         # Saving space while saving
         params = list()
@@ -101,25 +121,55 @@ with server_socket:
             success,image = vidcap.read()
             print('Read a new frame: ', success)
             count += 1
-    
-        '''
-        2. Generate depth maps from the video recieved
-        
-        Using monodepth2 to get depth maps from rgb images and saving in 'depth_images' folder
- 
-        '''
+
+
+    def run_algorithm(self):
+
+        # Generate depth maps from rbg images
+         
         args = parse_args()
         test_simple(args)
 
-        '''
-        3. Generate point cloud using open3d and rgbd data
-        '''
+
+        # Run open3d on rgb+depth maps to get the point cloud output
+
+        return
 
     
-        '''
-        4. Send the point cloud file to the mobile
-        '''
+    def send_data_to_client(self):
+
+
+
+
+
+        # Closing connection
+        self.con.close()
+        return
+
+
+
+if __name__=='__main__':
+
+    proj = Main()
+
+    proj.create_server()
+    proj.start_server()
+    data = proj.get_data_from_client()
+    proj.run_algorithm()
+    proj.send_data_to_client()
+
+
+
+
+
 
     
-    # Closing connection
-    con.close()
+    
+
+
+        
+    
+       
+
+    
+    

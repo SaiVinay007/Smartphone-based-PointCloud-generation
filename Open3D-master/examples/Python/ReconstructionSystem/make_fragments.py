@@ -124,6 +124,8 @@ def integrate_rgb_frames_for_fragment(color_files, depth_files, fragment_id,
         rgbd = read_rgbd_image(color_files[i_abs], depth_files[i_abs], False,
                                config)
         pose = pose_graph.nodes[i].pose
+        # print(rgbd, intrinsic)
+        # print(rgbd.shape)
         volume.integrate(rgbd, intrinsic, np.linalg.inv(pose))
     mesh = volume.extract_triangle_mesh()
     mesh.compute_vertex_normals()
