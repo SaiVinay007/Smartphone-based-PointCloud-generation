@@ -1,3 +1,4 @@
+# This is for testing on laptop but the real client code is in the android app
 import socket
 
 soc = socket.socket()
